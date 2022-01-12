@@ -9,4 +9,8 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  corePlugins: {
+    // preflight: true,
+    // container: true,
+  },
 };

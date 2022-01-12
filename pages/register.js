@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { gql, useMutation } from "@apollo/client";
-import client from "../apollo-client";
-import { useRouter } from "next/router";
+import { useContext, useState } from "react";
 
-const REGISTER_MUTATION = gql`
-  mutation register(
+import { useRouter } from "next/router";
+import { formHooks } from "../util/hooks";
+import { AuthContext } from "../context/authentication";
+import { useMutation } from "urql";
+
+const REGISTER_MUTATION = `
+  mutation (
     $username: String!
     $email: String!
     $password: String!
@@ -23,41 +25,36 @@ const REGISTER_MUTATION = gql`
       username
       createdAt
       token
+      photo
     }
   }
 `;
 
-export default function register() {
+export default function Register() {
+  const context = useContext(AuthContext);
   const router = useRouter();
   const [errors, setErrors] = useState({});
-  const [values, setValues] = useState({
+
+  const initialState = {
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-  });
-
-  const [addUser, { loading }] = useMutation(REGISTER_MUTATION, {
-    update(proxy, result) {
-      router.push("/");
-      console.log(result);
-    },
-    onError(err) {
-      console.log(err.graphQLErrors[0].extensions.errors);
-      setErrors(err.graphQLErrors[0].extensions.errors);
-    },
-    variables: values,
-  });
-
-  const onChange = (e) => {
-    setValues({ ...values, [e.target.name]: e.target.value });
   };
+  const { onChange, onSubmit, values } = formHooks(registerUser, initialState);
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    addUser();
-  };
+  const [result, addUser] = useMutation(REGISTER_MUTATION);
 
+  function registerUser() {
+    addUser(values).then((result) => {
+      if (result.error) {
+        setErrors(result.error.graphQLErrors[0].extensions.errors);
+      } else {
+        context.login(result.data.register);
+        router.push("/");
+      }
+    });
+  }
   return (
     <form
       onSubmit={onSubmit}
