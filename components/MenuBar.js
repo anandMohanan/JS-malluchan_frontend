@@ -1,14 +1,20 @@
 import { useContext, useState } from "react";
 import { Fragment } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
-import {
-  MenuIcon,
-  XIcon,
-  PlusCircleIcon,
-  UserCircleIcon,
-} from "@heroicons/react/outline";
+import { MenuIcon, XIcon, PlusCircleIcon } from "@heroicons/react/outline";
 import { AuthContext } from "../context/authentication";
+import { useQuery } from "urql";
 
+const GET_USER = `
+query{
+  getUser{
+    username
+    photo
+    id
+    createdAt
+  }
+}
+`;
 const navigation = [
   { name: "Home", href: "/", current: true },
   { name: "login", href: "/login", current: false },
@@ -20,7 +26,14 @@ function classNames(...classes) {
 }
 
 export const MenuBar = () => {
-  const { user, login, logout } = useContext(AuthContext);
+  const { login, logout } = useContext(AuthContext);
+  const [{ data, fetching, error }] = useQuery({
+    query: GET_USER,
+  });
+  let user;
+  if (data) {
+    user = data.getUser;
+  }
 
   const [activeItem, setActiveItem] = useState("");
 
@@ -103,7 +116,7 @@ export const MenuBar = () => {
                     <Menu.Button className="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
                       <span className="sr-only">Open user menu</span>
                       {/* <span>click</span> */}
-                      {/* <img
+                      <img
                         className="h-8 w-8 rounded-full"
                         src={
                           user.photo
@@ -111,8 +124,8 @@ export const MenuBar = () => {
                             : "https://media.giphy.com/media/2lVtkuOqgKGeA/giphy.gif"
                         }
                         alt=""
-                      /> */}
-                      <UserCircleIcon className="h-8 w-8 text-orange-50" />
+                      />
+                      {/* <UserCircleIcon className="h-8 w-8 text-orange-50" /> */}
                     </Menu.Button>
                   </div>
                   <Transition
@@ -192,6 +205,7 @@ export const MenuBar = () => {
                 key="logout"
                 as="a"
                 href="/"
+                onClick={logout}
                 className={classNames(
                   false
                     ? "bg-gray-900 text-white"

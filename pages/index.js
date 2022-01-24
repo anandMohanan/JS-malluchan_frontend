@@ -2,9 +2,11 @@ import Head from "next/head";
 
 import { MenuBar } from "../components/MenuBar";
 
-import { PostCard } from "../components/PostCard";
+// import { PostCard } from "../components/PostCard";
+import PostCard from "../components/PostCard";
 
 import { useQuery } from "urql";
+import { client, ssrCache } from "../urqlClient";
 
 const POST_QUERY = `
 query {
@@ -12,6 +14,9 @@ query {
   username
   body
   id
+  likes{
+    username
+  }
   likeCount
   commentCount
   createdAt
@@ -27,7 +32,9 @@ export default function Home() {
   const { data, fetching, error } = result;
 
   if (fetching) return "loading";
-  if (error) return "error";
+  if (error) {
+    console.log(error);
+  }
   return (
     <>
       <Head>
@@ -37,8 +44,23 @@ export default function Home() {
       </Head>
 
       <MenuBar />
-
-      <PostCard posts={data.getPosts} loading={fetching} />
+      {data.getPosts &&
+        data.getPosts.map((post) => {
+          return (
+            <>
+              <PostCard posts={post} loading={fetching} />
+            </>
+          );
+        })}
     </>
   );
 }
+
+// export async function getServerSideProps() {
+//   await client.query(POST_QUERY).toPromise();
+//   return {
+//     props: {
+//       urqlState: ssrCache.extractData(),
+//     },
+//   };
+// }

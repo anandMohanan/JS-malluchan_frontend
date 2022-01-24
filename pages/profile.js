@@ -1,6 +1,11 @@
 import { MenuBar } from "../components/MenuBar";
-import {  useQuery } from "urql";
+import { gql, useQuery } from "urql";
 import moment from "moment";
+import { PostCard } from "../components/PostCard";
+import { useContext } from "react";
+import { AuthContext } from "../context/authentication";
+import { ProfilePostCard } from "../components/ProfilePostCard";
+import { client, ssrCache } from "../urqlClient";
 
 const GET_USER = `
 query {
@@ -20,19 +25,20 @@ export default function Profile() {
   const [{ data, fetching, error }] = useQuery({
     query: GET_USER,
   });
+
   if (fetching) return <h1>loading</h1>;
+  // console.log(error);
   if (error) return <h1>error</h1>;
+  console.log(error);
   const user = data.getUser;
- 
+
   const profile = data ? (
     <>
       <MenuBar />
-     
+
       <div class="container mx-auto my-5 p-5">
         <div class="md:flex no-wrap md:-mx-2 ">
-         
           <div class="w-full md:w-9/12 mx-2 h-64">
-           
             <div class="bg-white p-3 shadow-sm rounded-sm">
               <div class="bg-white p-3 border-t-4 border-green-400">
                 <div class="image overflow-hidden">
@@ -53,7 +59,6 @@ export default function Profile() {
                   {user.bio ? user.bio : "bio"}
                 </h3>
                 <p class="text-sm text-red-600  hover:text-gray-600 leading-6">
-                 
                   Homophobic
                 </p>
               </div>
@@ -101,7 +106,7 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-           
+
             <ul class="bg-gray-100 text-gray-600 hover:text-gray-700 hover:shadow py-2 px-3 mt-3 divide-y rounded shadow-sm">
               <li class="flex items-center py-3">
                 <span>Status</span>
@@ -118,6 +123,7 @@ export default function Profile() {
                 </span>
               </li>
             </ul>
+            <ProfilePostCard />
           </div>
         </div>
       </div>
@@ -128,4 +134,12 @@ export default function Profile() {
     </>
   );
   return profile;
+}
+export async function getStaticProps() {
+  await client.query(GET_USER).toPromise();
+  return {
+    props: {
+      urqlState: ssrCache.extractData(),
+    },
+  };
 }

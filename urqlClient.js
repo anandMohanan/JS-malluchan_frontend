@@ -15,7 +15,7 @@ const client = createClient({
   exchanges: [dedupExchange, cacheExchange, ssrCache, fetchExchange],
   fetchOptions: () => {
     const token = Cookies.get("jwtToken");
-    console.log(token);
+
     return {
       headers: {
         Authorization: token ? `Bearer ${token}` : "kjdahsj",
